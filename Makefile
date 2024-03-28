@@ -7,7 +7,7 @@
 #
 ################################################################################
 # \copyright
-# Copyright 2018-2023, Cypress Semiconductor Corporation (an Infineon company)
+# Copyright 2018-2024, Cypress Semiconductor Corporation (an Infineon company)
 # SPDX-License-Identifier: Apache-2.0
 # 
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -144,7 +144,7 @@ ifeq ($(TARGET), $(filter $(TARGET), APP_CY8CKIT-062-BLE APP_CY8CPROTO-063-BLE A
 DEFINES+=DEVICE_BLE
 endif
 
-ifeq ($(TARGET), $(filter $(TARGET), APP_CYW920829M2EVK-02))
+ifeq ($(TARGET), $(filter $(TARGET), APP_CYW920829M2EVK-02 APP_CYW989829M2EVB-01))
 DEFINES+=DEVICE_20829
 endif
 

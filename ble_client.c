@@ -8,7 +8,7 @@
  *
  *
  *******************************************************************************
- * Copyright 2021-2023, Cypress Semiconductor Corporation (an Infineon company) or
+ * Copyright 2021-2024, Cypress Semiconductor Corporation (an Infineon company) or
  * an affiliate of Cypress Semiconductor Corporation.  All rights reserved.
  *
  * This software, including source code, documentation and related
@@ -323,6 +323,9 @@ static void tput_ble_app_init(void)
         printf("Scan LED PWM Initialization has failed! \n");
         CY_ASSERT(0);
     }
+    app_bt_scan_conn_state = APP_BT_SCAN_OFF_CONN_OFF;
+    tput_scan_led_update();
+
     /*Initialize the data packet to be sent as GATT notification to the peer
       device */
     for(uint8_t index = 0; index < WRITE_DATA_SIZE; index++)
@@ -818,10 +821,10 @@ static wiced_bt_gatt_status_t ble_app_connect_callback(
             memset(&conn_state_info, 0, sizeof(conn_state_info));
             /* Reset the flags */
             tput_service_found = false;
-            mode_flag = GATT_NOTIF_STOC;
+            mode_flag = GATT_NOTIFANDWRITE;
             enable_cccd = true;
             gatt_write_tx = false;
-
+            scan_flag = true;
             /* Clear tx and rx packet count */
             gatt_notif_rx_bytes = 0;
             gatt_write_tx_bytes = 0;
@@ -838,7 +841,7 @@ static wiced_bt_gatt_status_t ble_app_connect_callback(
                 CY_ASSERT(0);
             }
             /* Update the scan/conn state */
-            app_bt_scan_conn_state = APP_BT_SCAN_ON_CONN_OFF;
+            app_bt_scan_conn_state = APP_BT_SCAN_OFF_CONN_OFF;
             printf("Press user button on your kit to start scanning.....\n");
         }
 
@@ -954,18 +957,14 @@ void send_gatt_write_task(void *pvParam)
     while(true)
     {
     ulTaskNotifyTakeIndexed(TASK_NOTIFY_1MS_TIMER,pdTRUE, portMAX_DELAY);
-    /* Return if not connected. Nothing for throughput calculation */
-    if (!conn_state_info.conn_id)
-    {
-        return;
-    }
+
     /* Send GATT write(with no response) commands to the server only
      * when there is no GATT congestion and no GATT notifications are being
      * received. In data transfer mode 3(Both TX and RX), the GATT write
      * commands will be sent irrespective of GATT notifications being received
-     * or not.
+     * or not and when it is connected .
      */
-    if ( gatt_write_tx == true)
+    if ((conn_state_info.conn_id) && (gatt_write_tx == true))
     {
             tput_write_cmd.auth_req = GATT_AUTH_REQ_NONE;
             tput_write_cmd.handle = (tput_service_handle) + GATT_WRITE_HANDLE;
